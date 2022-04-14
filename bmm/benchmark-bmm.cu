@@ -60,6 +60,32 @@ bool check_result(float* p1, int* p2, const int N)
 }
 
 
+bool check_result(float* p1, unsigned int* p2, const int N)
+{
+    bool flag = true;
+    for (int i = 0; i < N * N; i ++) {
+        //printf("(%.0f,%d)",p1[i],p2[i]);
+        float diff = p1[i] - (float)p2[i];
+        if (fabs(diff) > 1e-6) {
+            flag = false;
+        }
+    }
+    return flag;
+}
+
+bool check_result(float* p1, ullong * p2, const int N)
+{
+    bool flag = true;
+    for (int i = 0; i < N * N; i ++) {
+        //printf("(%.0f,%d)",p1[i],p2[i]);
+        float diff = p1[i] - (float)p2[i];
+        if (fabs(diff) > 1e-6) {
+            flag = false;
+        }
+    }
+    return flag;
+}
+
 
 int main(int argc, char* argv[]) 
 {
@@ -180,14 +206,14 @@ int main(int argc, char* argv[])
     
     //============================================= BSTC-32
     cudaMemset(fC, 0, N * N * sizeof(float));
-    
+
     unsigned *tA, *tB;
 	cudaMalloc(&tA, N * N/32 * sizeof(unsigned));
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
     dim3 bmmDim(N/32, N/32);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
@@ -203,7 +229,7 @@ int main(int argc, char* argv[])
 
     cudaFree(tA);
     cudaFree(tB);
-    //----------------------- 
+    //-----------------------
 
     float* result_bblas = (float*)malloc(N * N * sizeof(float));
     cudaMemcpy(result_bblas, fC, N * N * sizeof(float), cudaMemcpyDeviceToHost);
@@ -218,8 +244,8 @@ int main(int argc, char* argv[])
     dim3 bmm64Dim(N/64, N/64);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    
-    //----------------------- 
+
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
@@ -232,7 +258,7 @@ int main(int argc, char* argv[])
     milliseconds = 0;
     cudaEventElapsedTime(&milliseconds,start,stop);
     double b64blas_time = (milliseconds*1e3)/double(TEST_TIMES);
-    //----------------------- 
+    //-----------------------
     float* result_b64blas = (float*)malloc(N * N * sizeof(float));
     cudaMemcpy(result_b64blas, fC, N * N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(llA);
@@ -244,7 +270,7 @@ int main(int argc, char* argv[])
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
@@ -260,7 +286,7 @@ int main(int argc, char* argv[])
     double bmm32s_time = (milliseconds*1e3)/double(TEST_TIMES);
     cudaFree(tA);
     cudaFree(tB);
-    //----------------------- 
+    //-----------------------
     float* result_bmm32s = (float*)malloc(N * N * sizeof(float));
     cudaMemcpy(result_bmm32s, fC, N * N * sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -270,7 +296,7 @@ int main(int argc, char* argv[])
 	cudaMalloc(&llB, N * N/64 * sizeof(ullong));
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
@@ -283,7 +309,7 @@ int main(int argc, char* argv[])
     milliseconds = 0;
     cudaEventElapsedTime(&milliseconds,start,stop);
     double bmm64s_time = (milliseconds*1e3)/double(TEST_TIMES);
-    //----------------------- 
+    //-----------------------
     float* result_bmm64s = (float*)malloc(N * N * sizeof(float));
     cudaMemcpy(result_bmm64s, fC, N * N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(llA);
@@ -293,14 +319,16 @@ int main(int argc, char* argv[])
     cudaMemset(uC, 0, N * N * sizeof(unsigned));
 	cudaMalloc(&tA, N * N/32 * sizeof(unsigned));
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
-    ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
-    ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
+//     ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
+//     ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
+        ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
         BMM32_BIN<<<dim3(N/32,N/32), 32>>>(tA, tB, uC, N, N, N);
     }
     cudaEventRecord(stop);
@@ -310,7 +338,7 @@ int main(int argc, char* argv[])
     double bmm32_bin_time = (milliseconds*1e3)/double(TEST_TIMES);
     cudaFree(tA);
     cudaFree(tB);
-    //----------------------- 
+    //-----------------------
     unsigned* result_bmm32_bin = (unsigned*)malloc(N * N * sizeof(unsigned));
     cudaMemcpy(result_bmm32_bin, uC, N * N * sizeof(unsigned), cudaMemcpyDeviceToHost);
 
@@ -318,14 +346,16 @@ int main(int argc, char* argv[])
     cudaMemset(ullC, 0, N * N * sizeof(ullong));
 	cudaMalloc(&llA, N * N/64 * sizeof(ullong));
 	cudaMalloc(&llB, N * N/64 * sizeof(ullong));
-    ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
-    ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
+//     ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
+//     ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
+        ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
         BMM64_BIN<<<dim3(N/64,N/64), 32>>>(llA, llB, ullC, N, N, N);
     }
 
@@ -334,7 +364,7 @@ int main(int argc, char* argv[])
     milliseconds = 0;
     cudaEventElapsedTime(&milliseconds,start,stop);
     double bmm64_bin_time = (milliseconds*1e3)/double(TEST_TIMES);
-    //----------------------- 
+    //-----------------------
     ullong* result_bmm64_bin = (ullong*)malloc(N * N * sizeof(ullong));
     cudaMemcpy(result_bmm64_bin, ullC, N * N * sizeof(ullong), cudaMemcpyDeviceToHost);
     cudaFree(llA);
@@ -344,14 +374,16 @@ int main(int argc, char* argv[])
     cudaMemset(uC, 0, N * N * sizeof(unsigned));
 	cudaMalloc(&tA, N * N/32 * sizeof(unsigned));
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
-    ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
-    ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
+//     ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
+//     ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        ToBit32Row<float><<<dim3(N/32,N/32), 32>>>(fB, tB, N, N);
+        ToBit32Col<float><<<dim3(N/32,N/32), 32>>>(fA, tA, N, N);
         BMM32S_BIN<<<dim3(N/32,N/32), 1024>>>(tA, tB, uC, N, N, N);
     }
     cudaEventRecord(stop);
@@ -361,7 +393,7 @@ int main(int argc, char* argv[])
     double bmm32s_bin_time = (milliseconds*1e3)/double(TEST_TIMES);
     cudaFree(tA);
     cudaFree(tB);
-    //----------------------- 
+    //-----------------------
     unsigned* result_bmm32s_bin = (unsigned*)malloc(N * N * sizeof(unsigned));
     cudaMemcpy(result_bmm32s_bin, uC, N * N * sizeof(unsigned), cudaMemcpyDeviceToHost);
 
@@ -371,14 +403,16 @@ int main(int argc, char* argv[])
     cudaMemset(ullC, 0, N * N * sizeof(ullong));
 	cudaMalloc(&llA, N * N/64 * sizeof(ullong));
 	cudaMalloc(&llB, N * N/64 * sizeof(ullong));
-    ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
-    ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
+//     ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
+//     ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    //----------------------- 
+    //-----------------------
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        ToBit64Row<float><<<dim3(N/64,N/32), 32>>>(fB, llB, N, N);
+        ToBit64Col<float><<<dim3(N/32,N/64), 32>>>(fA, llA, N, N);
         BMM64S_BIN<<<dim3(N/64,N/64), 1024>>>(llA, llB, ullC, N, N/64, N);
     }
 
@@ -387,7 +421,7 @@ int main(int argc, char* argv[])
     milliseconds = 0;
     cudaEventElapsedTime(&milliseconds,start,stop);
     double bmm64s_bin_time = (milliseconds*1e3)/double(TEST_TIMES);
-    //----------------------- 
+    //-----------------------
     ullong* result_bmm64s_bin = (ullong*)malloc(N * N * sizeof(ullong));
     cudaMemcpy(result_bmm64s_bin, ullC, N * N * sizeof(ullong), cudaMemcpyDeviceToHost);
     cudaFree(llA);
@@ -474,8 +508,8 @@ int main(int argc, char* argv[])
     //const unsigned BMMA_N = 4;
     //dim3 tensorcoreBlk(32, BMMA_M, BMMA_N);
     //dim3 tensorcoreDim(N/(8*BMMA_M), N/(8*BMMA_N));
-    BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
-    BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
+//     BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
+//     BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
 
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -483,6 +517,8 @@ int main(int argc, char* argv[])
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
+        BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
         BMMA_bin<BMMA_M,BMMA_N><<<tensorcoreDim, tensorcoreBlk>>>(tA, tB, uC, N, N, N/128);
     }
     cudaEventRecord(stop);
@@ -504,8 +540,8 @@ int main(int argc, char* argv[])
 	cudaMalloc(&tA, N * N/32 * sizeof(unsigned));
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
     
-    BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
-    BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
+//     BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
+//     BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
 
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -513,6 +549,8 @@ int main(int argc, char* argv[])
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        BMMA_toBit32Row<float><<<dim3(N,N/32), 32>>>(fA, tA, N, N);
+        BMMA_toBit32Col<float><<<dim3(N/32,N), 32>>>(fB, tB, N, N);
         BMMAS_bin<BMMAS_M><<<tensorcoreSDim, tensorcoreSBlk>>>(tA, tB, uC, N, N, N);
     }
     cudaEventRecord(stop);
@@ -567,8 +605,8 @@ int main(int argc, char* argv[])
 	cudaMalloc(&tA, N * N/32 * sizeof(unsigned));
 	cudaMalloc(&tB, N * N/32 * sizeof(unsigned));
     
-    BMMA_toBit32Row_new<float><<<dim3(N/8,N/128), dim3(32,8,4)>>>(fA, tA, N, N);
-    BMMA_toBit32Col_new<float><<<dim3(N/128,N/8), dim3(32,4,8)>>>(fB, tB, N, N);
+//     BMMA_toBit32Row_new<float><<<dim3(N/8,N/128), dim3(32,8,4)>>>(fA, tA, N, N);
+//     BMMA_toBit32Col_new<float><<<dim3(N/128,N/8), dim3(32,4,8)>>>(fB, tB, N, N);
 
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -576,6 +614,8 @@ int main(int argc, char* argv[])
     cudaEventRecord(start);
     for (int i=0; i<TEST_TIMES; i++)
     {
+        BMMA_toBit32Row_new<float><<<dim3(N/8,N/128), dim3(32,8,4)>>>(fA, tA, N, N);
+        BMMA_toBit32Col_new<float><<<dim3(N/128,N/8), dim3(32,4,8)>>>(fB, tB, N, N);
         BMMAS_bin_new<<<tensorcoreSDim, tensorcoreSBlk>>>(tA, tB, uC, N, N, N);
     }
     cudaEventRecord(stop);
@@ -593,20 +633,29 @@ int main(int argc, char* argv[])
 
     //============================================= CHECK RESULT
     printf("XNOR success: %d\n", check_result(result_cublas, result_xnor, N));
-    printf("CUBLAS success: %d\n", check_result(result_cublas, result_cublas, N));
-    printf("BMM-32 success: %d\n", check_result(result_cublas, result_bblas, N));
-    printf("BMM-64 success: %d\n", check_result(result_cublas, result_b64blas, N));
-    printf("BMMS-32 success: %d\n", check_result(result_cublas, result_bmm32s, N));
-    printf("BMMS-64 success: %d\n", check_result(result_cublas, result_bmm64s, N));
-    printf("BMMA success: %d\n", check_result(result_cublas, result_tensorcore, N));
-    printf("BMMAS success: %d\n", check_result(result_cublas, result_tensorcore_s, N));
+    printf("CUBLAS success: %d\n", check_result(result_xnor, result_cublas, N));
+    printf("BMM-32 success: %d\n", check_result(result_xnor, result_bblas, N));
+    printf("BMM-64 success: %d\n", check_result(result_xnor, result_b64blas, N));
+    printf("BMMS-32 success: %d\n", check_result(result_xnor, result_bmm32s, N));
+    printf("BMMS-64 success: %d\n", check_result(result_xnor, result_bmm64s, N));
+    printf("BMMA success: %d\n", check_result(result_xnor, result_tensorcore, N));
+    printf("BMMAS success: %d\n", check_result(result_xnor, result_tensorcore_s, N));
 
+    printf("BMMA_BIN success: %d\n", check_result(result_xnor, result_bmma_bin, N));
+    printf("BMMAS_BIN success: %d\n", check_result(result_xnor, result_bmmas_bin, N));
+    printf("BMMA_SN success: %d\n", check_result(result_xnor, result_bmma_sn, N));
+    printf("BMMASN_BIN success: %d\n", check_result(result_xnor, result_bmmasn_bin, N));
+
+    printf("result_bmm32_bin success: %d\n", check_result(result_xnor, result_bmm32_bin, N));
+    printf("result_bmm64_bin success: %d\n", check_result(result_xnor, result_bmm64_bin, N));
+    printf("result_bmm32s_bin success: %d\n", check_result(result_xnor, result_bmm32s_bin, N));
+    printf("result_bmm64s_bin success: %d\n", check_result(result_xnor, result_bmm64s_bin, N));
 
     //for (int i=0; i<10; i++)
     //printf("bmm32_bin:%x,bmm32s_bin:%x,bmm64_bin:%llx,bmm64s_bin:%llx\n", result_bmm32_bin[i],
     //result_bmm32s_bin[i], result_bmm64_bin[i], result_bmm64s_bin[i]);
 
-    printf("CUBLAS:%.3lf, BNN:%.3lf, BMM-32:%.3lf, BMM-64:%.3lf, BMMS-32:%.3lf, BMMS-64:%.3lf, BMM-32-Bin:%.3lf, BMM-64-Bin:%.3lf, BMMS-32-Bin:%.3lf, BMMS-64-Bin:%.3lf, BMMA:%.3lf, BMMAS:%.3lf, BMMA-Bin:%.3lf, BMMAS-Bin:%.3lf, BMMASN:%.3lf, BMMASN-Bin:%.3lf \n", 
+    printf("CUBLAS:%.3lf,\nBNN:%.3lf,\nBMM-32:%.3lf,\nBMM-64:%.3lf,\nBMMS-32:%.3lf,\nBMMS-64:%.3lf,\nBMM-32-Bin:%.3lf,\nBMM-64-Bin:%.3lf,\nBMMS-32-Bin:%.3lf,\nBMMS-64-Bin:%.3lf,\nBMMA:%.3lf,\nBMMAS:%.3lf,\nBMMA-Bin:%.3lf,\nBMMAS-Bin:%.3lf,\nBMMASN:%.3lf,\nBMMASN-Bin:%.3lf \n",
             cublas_time, baseline_time, bblas_time, b64blas_time, bmm32s_time, bmm64s_time,
             bmm32_bin_time, bmm64_bin_time, bmm32s_bin_time, bmm64s_bin_time, tensorcore_time,
             tensorcore_s_time, bmma_bin_time, bmmas_bin_time, bmma_sn_time, bmmasn_bin_time);
