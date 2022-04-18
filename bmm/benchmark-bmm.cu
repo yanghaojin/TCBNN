@@ -33,29 +33,31 @@
 
 using namespace std;
 
-bool check_result(float* p1, float* p2, const int N) 
+bool check_result(float* p1, float* p2, const int N)
 {
     bool flag = true;
     for (int i = 0; i < N * N; i ++) {
-        //printf("(%f,%f)",p1[i],p2[i]);
+//         printf("(%.0f,%.0f) ",p1[i],p2[i]);
         float diff = p1[i] - p2[i];
         if (fabs(diff) > 1e-6) {
             flag = false;
         }
     }
+//     std::cout<< std::endl;
     return flag;
 }
 
-bool check_result(float* p1, int* p2, const int N) 
+bool check_result(float* p1, int* p2, const int N)
 {
     bool flag = true;
     for (int i = 0; i < N * N; i ++) {
-        //printf("(%.0f,%d)",p1[i],p2[i]);
+//         printf("(%.0f,%.0f) ",p1[i],(float)p2[i]);
         float diff = p1[i] - (float)p2[i];
         if (fabs(diff) > 1e-6) {
             flag = false;
         }
     }
+//     std::cout<< std::endl;
     return flag;
 }
 
@@ -64,12 +66,13 @@ bool check_result(float* p1, unsigned int* p2, const int N)
 {
     bool flag = true;
     for (int i = 0; i < N * N; i ++) {
-        //printf("(%.0f,%d)",p1[i],p2[i]);
+//         printf("(%.0f,%.0f) ",p1[i],(float)p2[i]);
         float diff = p1[i] - (float)p2[i];
         if (fabs(diff) > 1e-6) {
             flag = false;
         }
     }
+//     std::cout<< std::endl;
     return flag;
 }
 
@@ -77,12 +80,13 @@ bool check_result(float* p1, ullong * p2, const int N)
 {
     bool flag = true;
     for (int i = 0; i < N * N; i ++) {
-        //printf("(%.0f,%d)",p1[i],p2[i]);
+//         printf("(%.0f,%.0f) ",p1[i],(float)p2[i]);
         float diff = p1[i] - (float)p2[i];
         if (fabs(diff) > 1e-6) {
             flag = false;
         }
     }
+//     std::cout<< std::endl;
     return flag;
 }
 
@@ -632,7 +636,7 @@ int main(int argc, char* argv[])
     cudaMemcpy(result_bmmasn_bin, uC, N * N * sizeof(int), cudaMemcpyDeviceToHost);
 
     //============================================= CHECK RESULT
-    printf("XNOR success: %d\n", check_result(result_cublas, result_xnor, N));
+    printf("XNOR success: %d\n", check_result(result_xnor, result_cublas, N));
     printf("CUBLAS success: %d\n", check_result(result_xnor, result_cublas, N));
     printf("BMM-32 success: %d\n", check_result(result_xnor, result_bblas, N));
     printf("BMM-64 success: %d\n", check_result(result_xnor, result_b64blas, N));
@@ -640,25 +644,23 @@ int main(int argc, char* argv[])
     printf("BMMS-64 success: %d\n", check_result(result_xnor, result_bmm64s, N));
     printf("BMMA success: %d\n", check_result(result_xnor, result_tensorcore, N));
     printf("BMMAS success: %d\n", check_result(result_xnor, result_tensorcore_s, N));
-
-    printf("BMMA_BIN success: %d\n", check_result(result_xnor, result_bmma_bin, N));
-    printf("BMMAS_BIN success: %d\n", check_result(result_xnor, result_bmmas_bin, N));
     printf("BMMA_SN success: %d\n", check_result(result_xnor, result_bmma_sn, N));
-    printf("BMMASN_BIN success: %d\n", check_result(result_xnor, result_bmmasn_bin, N));
 
-    printf("result_bmm32_bin success: %d\n", check_result(result_xnor, result_bmm32_bin, N));
-    printf("result_bmm64_bin success: %d\n", check_result(result_xnor, result_bmm64_bin, N));
-    printf("result_bmm32s_bin success: %d\n", check_result(result_xnor, result_bmm32s_bin, N));
-    printf("result_bmm64s_bin success: %d\n", check_result(result_xnor, result_bmm64s_bin, N));
+//     printf("BMMASN_BIN success: %d\n", check_result(result_xnor, result_bmmasn_bin, N));
+//     printf("BMMA_BIN success: %d\n", check_result(result_xnor, result_bmma_bin, N));
+//     printf("BMMAS_BIN success: %d\n", check_result(result_xnor, result_bmmas_bin, N));
+//     printf("result_bmm32_bin success: %d\n", check_result(result_xnor, result_bmm32_bin, N));
+//     printf("result_bmm64_bin success: %d\n", check_result(result_xnor, result_bmm64_bin, N));
+//     printf("result_bmm32s_bin success: %d\n", check_result(result_xnor, result_bmm32s_bin, N));
+//     printf("result_bmm64s_bin success: %d\n", check_result(result_xnor, result_bmm64s_bin, N));
 
     //for (int i=0; i<10; i++)
     //printf("bmm32_bin:%x,bmm32s_bin:%x,bmm64_bin:%llx,bmm64s_bin:%llx\n", result_bmm32_bin[i],
     //result_bmm32s_bin[i], result_bmm64_bin[i], result_bmm64s_bin[i]);
 
-    printf("CUBLAS:%.3lf,\nBNN:%.3lf,\nBMM-32:%.3lf,\nBMM-64:%.3lf,\nBMMS-32:%.3lf,\nBMMS-64:%.3lf,\nBMM-32-Bin:%.3lf,\nBMM-64-Bin:%.3lf,\nBMMS-32-Bin:%.3lf,\nBMMS-64-Bin:%.3lf,\nBMMA:%.3lf,\nBMMAS:%.3lf,\nBMMA-Bin:%.3lf,\nBMMAS-Bin:%.3lf,\nBMMASN:%.3lf,\nBMMASN-Bin:%.3lf \n",
+    printf("CUBLAS:%.3lf,\nBNN:%.3lf,\nBMM-32:%.3lf,\nBMM-64:%.3lf,\nBMMS-32:%.3lf,\nBMMS-64:%.3lf,\nBMMA:%.3lf,\nBMMAS:%.3lf,\nBMMA_SN:%.3lf,\n",
             cublas_time, baseline_time, bblas_time, b64blas_time, bmm32s_time, bmm64s_time,
-            bmm32_bin_time, bmm64_bin_time, bmm32s_bin_time, bmm64s_bin_time, tensorcore_time,
-            tensorcore_s_time, bmma_bin_time, bmmas_bin_time, bmma_sn_time, bmmasn_bin_time);
+            tensorcore_time, tensorcore_s_time, bmma_sn_time);
 
 
     cudaFree(fA);
